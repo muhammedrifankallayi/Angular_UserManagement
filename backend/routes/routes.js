@@ -5,6 +5,7 @@ const { Router } = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const Todo = require('../models/todo');
 const router = Router();
 const multer = require('multer');
 const upload = multer({ dest:'./file'});
@@ -139,5 +140,111 @@ router.get('/profile',async(req,res)=>{
         console.log(error.message);
     }
 })
+
+router.get('/todos', async (req, res) => {
+    try {
+        const cookie = req.cookies["jwt"];
+        const claims = jwt.verify(cookie, "secret");
+        if (!claims) {
+            return res.status(401).send({
+                message: "unauthenticated"
+            });
+        }
+
+        const todos = await Todo.find({ userId: claims._id });
+        res.send(todos);
+    } catch (error) {
+        return res.status(401).send({
+            message: 'unauthenticated'
+        });
+    }
+});
+
+router.post('/todos', async (req, res) => {
+    try {
+        const cookie = req.cookies["jwt"];
+        const claims = jwt.verify(cookie, "secret");
+        if (!claims) {
+            return res.status(401).send({
+                message: "unauthenticated"
+            });
+        }
+
+        const todo = new Todo({
+            userId: claims._id,
+            task: req.body.task
+        });
+
+        const result = await todo.save();
+        res.send(result);
+    } catch (error) {
+        return res.status(401).send({
+            message: 'unauthenticated'
+        });
+    }
+});
+
+router.put('/todos/:id', async (req, res) => {
+    try {
+        const cookie = req.cookies["jwt"];
+        const claims = jwt.verify(cookie, "secret");
+        if (!claims) {
+            return res.status(401).send({
+                message: "unauthenticated"
+            });
+        }
+
+        const { task, completed } = req.body;
+        const update = {};
+        if (task !== undefined) update.task = task;
+        if (completed !== undefined) update.completed = completed;
+
+        const todo = await Todo.findOneAndUpdate(
+            { _id: req.params.id, userId: claims._id },
+            { $set: update },
+            { new: true }
+        );
+
+        if (!todo) {
+            return res.status(404).send({
+                message: "Todo not found"
+            });
+        }
+
+        res.send(todo);
+    } catch (error) {
+        return res.status(401).send({
+            message: 'unauthenticated'
+        });
+    }
+});
+
+router.delete('/todos/:id', async (req, res) => {
+    try {
+        const cookie = req.cookies["jwt"];
+        const claims = jwt.verify(cookie, "secret");
+        if (!claims) {
+            return res.status(401).send({
+                message: "unauthenticated"
+            });
+        }
+
+        const result = await Todo.deleteOne({ _id: req.params.id, userId: claims._id });
+
+        if (result.deletedCount === 0) {
+            return res.status(404).send({
+                message: "Todo not found"
+            });
+        }
+
+        res.send({
+            message: "success"
+        });
+    } catch (error) {
+        return res.status(401).send({
+            message: 'unauthenticated'
+        });
+    }
+});
 
 module.exports = router
