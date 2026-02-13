@@ -22,6 +22,7 @@ import { appService } from './components/state/app.service';
 import { AdminUserlistComponent } from './components/admin-userlist/admin-userlist.component';
 import { AdminUsereditComponent } from './components/admin-useredit/admin-useredit.component';
 import { AdminCreateuserComponent } from './components/admin-createuser/admin-createuser.component';
+import { TodoComponent } from './components/todo/todo.component';
 
 @NgModule({
   declarations: [
@@ -36,7 +37,8 @@ import { AdminCreateuserComponent } from './components/admin-createuser/admin-cr
     ProfileComponent,
     AdminUserlistComponent,
     AdminUsereditComponent,
-    AdminCreateuserComponent
+    AdminCreateuserComponent,
+    TodoComponent
   ],
   imports: [
     BrowserModule,

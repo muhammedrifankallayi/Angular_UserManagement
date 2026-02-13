@@ -1,0 +1,28 @@
+<app-nav></app-nav>
+
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <h2 class="text-center mb-4">My To-Do List</h2>
+
+      <div class="input-group mb-3">
+        <input type="text" class="form-control" placeholder="New task..." [(ngModel)]="newTask" (keyup.enter)="addTodo()">
+        <button class="btn btn-primary" type="button" (click)="addTodo()">Add</button>
+      </div>
+
+      <ul class="list-group">
+        <li *ngFor="let todo of todos" class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <input type="checkbox" [checked]="todo.completed" (change)="toggleTodo(todo)" class="me-2">
+            <span [style.text-decoration]="todo.completed ? 'line-through' : 'none'">{{todo.task}}</span>
+          </div>
+          <button class="btn btn-danger btn-sm" (click)="deleteTodo(todo._id)">Delete</button>
+        </li>
+      </ul>
+
+      <div *ngIf="todos.length === 0" class="text-center mt-3">
+        <p>No tasks yet. Add one above!</p>
+      </div>
+    </div>
+  </div>
+</div>
