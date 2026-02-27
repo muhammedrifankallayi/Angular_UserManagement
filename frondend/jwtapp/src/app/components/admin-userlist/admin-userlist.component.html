@@ -1,7 +1,7 @@
 <app-admin-nav></app-admin-nav>
 <div class="form-signin">
     <h3>Users List</h3>
-    <input type="text" placeholder="Search" class="input">
+    <input type="text" placeholder="Search" class="input" (input)="onSearch($event)">
 </div>
 <div class="container">
     <table class="table">
@@ -14,8 +14,8 @@
             <th scope="col">Action</th>
           </tr>
         </thead>
-        <tbody *ngIf="(userdata$ | async) as userdata">
-            <tr *ngFor="let item of userdata; let i = index">
+        <tbody>
+            <tr *ngFor="let item of filteredUserdata; let i = index">
               <td>{{i+1}}</td>
               <td><img class="rounded-circle" [src]='"http://localhost:5000/file/"+item.image' alt="No image" width="40px" height="40px"></td>
               <td>{{item.name}}</td>
