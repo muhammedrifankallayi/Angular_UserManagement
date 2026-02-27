@@ -7,6 +7,30 @@ const User = require('../models/user');
 const adminrouter = Router();
 const bcrypt = require('bcryptjs');
 
+const authMiddleware = async (req, res, next) => {
+    try {
+        const cookie = req.cookies["jwt"];
+        const claims = jwt.verify(cookie, "secret");
+        if (!claims) {
+            return res.status(401).send({
+                message: "unauthenticated"
+            });
+        }
+
+        const user = await User.findOne({ _id: claims._id });
+        if (!user || (user.is_admin !== true && user.is_admin !== "true")) {
+            return res.status(401).send({
+                message: "unauthenticated"
+            });
+        }
+        next();
+    } catch (error) {
+        return res.status(401).send({
+            message: "unauthenticated"
+        });
+    }
+};
+
 adminrouter.post('/login',async (req,res)=>{
     try {
         const user = await User.findOne({email:req.body.email,is_admin:true});
@@ -48,28 +72,23 @@ adminrouter.post('/logout',async (req,res)=>{
     }
 })
 
-adminrouter.get('/active',async (req,res)=>{
+adminrouter.get('/active', authMiddleware, async (req, res) => {
     try {
-       const cookie = req.cookies["jwt"];
-       const claims = jwt.verify(cookie,"secret")
-       if(!claims){
-        return res.status(401).send({
-            message:"unauthenticated"
-        })
-       } 
+        const cookie = req.cookies["jwt"];
+        const claims = jwt.decode(cookie);
 
-       const user = await User.findOne({_id:claims._id})
-       const {password, ...data} = await user.toJSON();
-       console.log(data);
-       res.send(data)
+        const user = await User.findOne({ _id: claims._id })
+        const { password, ...data } = await user.toJSON();
+        console.log(data);
+        res.send(data)
     } catch (error) {
         return res.status(401).send({
-            message:"unauthenticated"
+            message: "unauthenticated"
         })
     }
 })
 
-adminrouter.get('/users',async (req,res)=>{
+adminrouter.get('/users', authMiddleware, async (req, res) => {
     try {
         const user = await User.find({})
         // const {password, ...data} = await user.toJSON();
@@ -80,30 +99,30 @@ adminrouter.get('/users',async (req,res)=>{
     }
 })
 
-adminrouter.post('/deleteUser/:id',async (req,res)=>{
+adminrouter.post('/deleteUser/:id', authMiddleware, async (req, res) => {
     try {
-        const deleteUser = await User.deleteOne({_id:req.params.id});
-        if(!deleteUser){
+        const deleteUser = await User.deleteOne({ _id: req.params.id });
+        if (!deleteUser) {
             res.send({
-                message:"Deletion went wrong"
+                message: "Deletion went wrong"
             })
         }
         console.log(deleteUser);
         res.send(deleteUser);
     } catch (error) {
-        
+
     }
 })
 
-adminrouter.post('/editDetails/:id',async(req,res)=>{
+adminrouter.post('/editDetails/:id', authMiddleware, async (req, res) => {
     try {
-        const userData = await User.findOne({_id:req.params.id});
-        if(!userData){
+        const userData = await User.findOne({ _id: req.params.id });
+        if (!userData) {
             res.send({
-                message:"Something went wrong"
+                message: "Something went wrong"
             })
         }
-        const {password,...data} = await userData.toJSON();
+        const { password, ...data } = await userData.toJSON();
         console.log(data);
         res.send(data);
     } catch (error) {
@@ -111,53 +130,44 @@ adminrouter.post('/editDetails/:id',async(req,res)=>{
     }
 })
 
-adminrouter.post('/editUser',async(req,res)=>{
+adminrouter.post('/editUser', authMiddleware, async (req, res) => {
     try {
         let name = req.body.name;
-        let userupdate = await User.updateOne({email:req.body.email},{$set:{name:name}});
+        let userupdate = await User.updateOne({ email: req.body.email }, { $set: { name: name } });
         res.send({
-            message:"success"
+            message: "success"
         })
     } catch (error) {
         console.log(error.message);
     }
 })
 
-adminrouter.post('/createuser',async(req,res)=>{
+adminrouter.post('/createuser', authMiddleware, async (req, res) => {
     try {
         let email = req.body.email;
-    let password = req.body.password;
-    let name = req.body.name;
+        let password = req.body.password;
+        let name = req.body.name;
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password,salt);
-    const record = await User.findOne({email:email});
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        const record = await User.findOne({ email: email });
 
-    if(record){
-        return res.status(400).send({
-            message:"Email is already registered"
-        })
-    }else{
-        const user = new User({
-            name:name,
-            email:email,
-            password:hashedPassword
-        })
-        const result = await user.save();
+        if (record) {
+            return res.status(400).send({
+                message: "Email is already registered"
+            })
+        } else {
+            const user = new User({
+                name: name,
+                email: email,
+                password: hashedPassword
+            })
+            const result = await user.save();
 
-        //jwt token
-        const {_id} = await result.toJSON();
-        const token = jwt.sign({_id:_id},"secret");
-
-        res.cookie("jwt",token,{
-            httpOnly:true,
-            maxAge:24*60*60*1000
-        })
-
-        res.send({
-            message:"success"
-        })   
-    }
+            res.send({
+                message: "success"
+            })
+        }
     } catch (error) {
         console.log(error.message);
     }
