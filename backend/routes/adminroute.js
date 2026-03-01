@@ -7,6 +7,31 @@ const User = require('../models/user');
 const adminrouter = Router();
 const bcrypt = require('bcryptjs');
 
+const auth = async (req, res, next) => {
+    try {
+        const cookie = req.cookies["jwt"];
+        const claims = jwt.verify(cookie, "secret");
+        if (!claims) {
+            return res.status(401).send({
+                message: "unauthenticated"
+            });
+        }
+
+        const user = await User.findOne({ _id: claims._id });
+        if (!user || !user.is_admin) {
+            return res.status(401).send({
+                message: "unauthenticated"
+            });
+        }
+        req.user = user;
+        next();
+    } catch (error) {
+        return res.status(401).send({
+            message: "unauthenticated"
+        });
+    }
+};
+
 adminrouter.post('/login',async (req,res)=>{
     try {
         const user = await User.findOne({email:req.body.email,is_admin:true});
@@ -69,7 +94,7 @@ adminrouter.get('/active',async (req,res)=>{
     }
 })
 
-adminrouter.get('/users',async (req,res)=>{
+adminrouter.get('/users', auth, async (req,res)=>{
     try {
         const user = await User.find({})
         // const {password, ...data} = await user.toJSON();
@@ -80,7 +105,7 @@ adminrouter.get('/users',async (req,res)=>{
     }
 })
 
-adminrouter.post('/deleteUser/:id',async (req,res)=>{
+adminrouter.post('/deleteUser/:id', auth, async (req,res)=>{
     try {
         const deleteUser = await User.deleteOne({_id:req.params.id});
         if(!deleteUser){
@@ -95,7 +120,7 @@ adminrouter.post('/deleteUser/:id',async (req,res)=>{
     }
 })
 
-adminrouter.post('/editDetails/:id',async(req,res)=>{
+adminrouter.post('/editDetails/:id', auth, async(req,res)=>{
     try {
         const userData = await User.findOne({_id:req.params.id});
         if(!userData){
@@ -111,7 +136,7 @@ adminrouter.post('/editDetails/:id',async(req,res)=>{
     }
 })
 
-adminrouter.post('/editUser',async(req,res)=>{
+adminrouter.post('/editUser', auth, async(req,res)=>{
     try {
         let name = req.body.name;
         let userupdate = await User.updateOne({email:req.body.email},{$set:{name:name}});
@@ -123,7 +148,7 @@ adminrouter.post('/editUser',async(req,res)=>{
     }
 })
 
-adminrouter.post('/createuser',async(req,res)=>{
+adminrouter.post('/createuser', auth, async(req,res)=>{
     try {
         let email = req.body.email;
     let password = req.body.password;
@@ -144,15 +169,6 @@ adminrouter.post('/createuser',async(req,res)=>{
             password:hashedPassword
         })
         const result = await user.save();
-
-        //jwt token
-        const {_id} = await result.toJSON();
-        const token = jwt.sign({_id:_id},"secret");
-
-        res.cookie("jwt",token,{
-            httpOnly:true,
-            maxAge:24*60*60*1000
-        })
 
         res.send({
             message:"success"
