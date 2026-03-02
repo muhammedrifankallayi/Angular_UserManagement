@@ -15,6 +15,8 @@ import Swal from 'sweetalert2';
   styleUrls: ['./admin-userlist.component.css']
 })
 export class AdminUserlistComponent implements OnInit {
+  searchText: string = '';
+
   constructor(
     private http:HttpClient,
     private store:Store<{allusers:Users[]}>,
@@ -24,6 +26,18 @@ export class AdminUserlistComponent implements OnInit {
 
   userdata$ = this.store.pipe(select(uniqueEmail))
     
+  get filteredUserData() {
+    let users: Users[] = [];
+    this.userdata$.subscribe(data => users = data);
+    if (!this.searchText) {
+      return users;
+    }
+    return users.filter(user =>
+      user.name.toLowerCase().includes(this.searchText.toLowerCase()) ||
+      user.email.toLowerCase().includes(this.searchText.toLowerCase())
+    );
+  }
+
   ngOnInit(): void {
     this.http.get('http://localhost:5000/api/admin/active',{
       withCredentials:true
@@ -39,7 +53,7 @@ export class AdminUserlistComponent implements OnInit {
   }
 
   deleteUser(userId: any){
-    this.http.post(`http://localhost:5000/api/admin/deleteUser/${userId}`,{
+    this.http.post(`http://localhost:5000/api/admin/deleteUser/${userId}`,{},{
       withCredentials:true
     }).subscribe((res:any)=>{
       this.store.dispatch(retrievepost())
