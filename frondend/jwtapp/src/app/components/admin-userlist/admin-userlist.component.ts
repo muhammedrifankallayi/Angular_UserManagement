@@ -8,6 +8,7 @@ import { Users } from '../models/allUsers';
 import { appService } from '../state/app.service';
 import { uniqueEmail } from '../state/app.selectors';
 import Swal from 'sweetalert2';
+import { BehaviorSubject, combineLatest, map } from 'rxjs';
 
 @Component({
   selector: 'app-admin-userlist',
@@ -22,7 +23,19 @@ export class AdminUserlistComponent implements OnInit {
     private appService:appService
   ){}
 
-  userdata$ = this.store.pipe(select(uniqueEmail))
+  private searchText$ = new BehaviorSubject<string>('');
+
+  userdata$ = combineLatest([
+    this.store.pipe(select(uniqueEmail)),
+    this.searchText$
+  ]).pipe(
+    map(([users, searchText]) => {
+      return users.filter(user =>
+        user.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchText.toLowerCase())
+      );
+    })
+  );
     
   ngOnInit(): void {
     this.http.get('http://localhost:5000/api/admin/active',{
@@ -39,7 +52,7 @@ export class AdminUserlistComponent implements OnInit {
   }
 
   deleteUser(userId: any){
-    this.http.post(`http://localhost:5000/api/admin/deleteUser/${userId}`,{
+    this.http.post(`http://localhost:5000/api/admin/deleteUser/${userId}`,{},{
       withCredentials:true
     }).subscribe((res:any)=>{
       this.store.dispatch(retrievepost())
@@ -55,6 +68,10 @@ export class AdminUserlistComponent implements OnInit {
 
   editUser(userId:any){
     this.router.navigate(['/admin/edit',userId])
+  }
+
+  search(event: any) {
+    this.searchText$.next(event.target.value);
   }
   
 }

@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { ReactiveFormsModule } from '@angular/forms';
+import { RouterTestingModule } from '@angular/router/testing';
 import { AdminUsereditComponent } from './admin-useredit.component';
 
 describe('AdminUsereditComponent', () => {
@@ -8,7 +10,8 @@ describe('AdminUsereditComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [AdminUsereditComponent]
+      declarations: [AdminUsereditComponent],
+      imports: [HttpClientTestingModule, ReactiveFormsModule, RouterTestingModule]
     });
     fixture = TestBed.createComponent(AdminUsereditComponent);
     component = fixture.componentInstance;
