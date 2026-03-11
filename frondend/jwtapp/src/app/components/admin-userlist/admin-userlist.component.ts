@@ -39,7 +39,7 @@ export class AdminUserlistComponent implements OnInit {
   }
 
   deleteUser(userId: any){
-    this.http.post(`http://localhost:5000/api/admin/deleteUser/${userId}`,{
+    this.http.post(`http://localhost:5000/api/admin/deleteUser/${userId}`,{},{
       withCredentials:true
     }).subscribe((res:any)=>{
       this.store.dispatch(retrievepost())
