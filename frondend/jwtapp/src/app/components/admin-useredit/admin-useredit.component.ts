@@ -69,7 +69,7 @@ export class AdminUsereditComponent implements OnInit {
     }else if(user.name == ''){
       Swal.fire("Error","fields cannot be empty","error");
     }else{
-      this.http.post('http://localhost:5000/api/admin/editUser',user,{
+      this.http.post('http://localhost:5000/api/admin/editUser',user, {
         withCredentials: true
       }).subscribe(()=>this.route.navigate(['/admin/userlist']),
       (err)=>{
@@ -79,7 +79,7 @@ export class AdminUsereditComponent implements OnInit {
   }
 
   getusers(userId:any){
-    this.http.post(`http://localhost:5000/api/admin/editDetails/${userId}`,{
+    this.http.post(`http://localhost:5000/api/admin/editDetails/${userId}`, {}, {
       withCredentials: true
     }).subscribe((res:any)=>{
       console.log(res);

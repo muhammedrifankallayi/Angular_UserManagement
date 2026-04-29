@@ -22,7 +22,7 @@ adminrouter.post('/login',async (req,res)=>{
             })
         }
 
-        const token = jwt.sign({_id:user._id},"secret");
+        const token = jwt.sign({_id:user._id},process.env.jwtsecret);
 
         res.cookie("jwt",token,{
             httpOnly:true,
@@ -51,7 +51,7 @@ adminrouter.post('/logout',async (req,res)=>{
 adminrouter.get('/active',async (req,res)=>{
     try {
        const cookie = req.cookies["jwt"];
-       const claims = jwt.verify(cookie,"secret")
+       const claims = jwt.verify(cookie,process.env.jwtsecret)
        if(!claims){
         return res.status(401).send({
             message:"unauthenticated"
@@ -71,10 +71,12 @@ adminrouter.get('/active',async (req,res)=>{
 
 adminrouter.get('/users',async (req,res)=>{
     try {
-        const user = await User.find({})
-        // const {password, ...data} = await user.toJSON();
-        console.log(user);
-        res.send(user)
+        const users = await User.find({})
+        const data = users.map(user => {
+            const { password, ...userData } = user.toObject();
+            return userData;
+        });
+        res.send(data)
     } catch (error) {
         console.log(error.message);
     }
@@ -144,15 +146,6 @@ adminrouter.post('/createuser',async(req,res)=>{
             password:hashedPassword
         })
         const result = await user.save();
-
-        //jwt token
-        const {_id} = await result.toJSON();
-        const token = jwt.sign({_id:_id},"secret");
-
-        res.cookie("jwt",token,{
-            httpOnly:true,
-            maxAge:24*60*60*1000
-        })
 
         res.send({
             message:"success"

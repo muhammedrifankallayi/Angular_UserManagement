@@ -1,0 +1,27 @@
+
+> jwtapp@0.0.0 start
+> ng serve
+
+- Generating browser application bundles (phase: setup)...
+✔ Browser application bundle generation complete.
+
+Initial Chunk Files   | Names         |  Raw Size
+vendor.js             | vendor        |   2.85 MB |
+polyfills.js          | polyfills     | 329.31 kB |
+styles.css, styles.js | styles        | 226.74 kB |
+main.js               | main          | 109.56 kB |
+runtime.js            | runtime       |   6.51 kB |
+
+| Initial Total |   3.50 MB
+
+Build at: 2026-04-29T15:42:58.227Z - Hash: 1d211aa8f0564ca6 - Time: 10813ms
+
+Warning: /app/frondend/jwtapp/src/app/components/register/register.component.ts depends on 'sweetalert2'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+
+** Angular Live Development Server is listening on localhost:4200, open your browser on http://localhost:4200/ **
+
+
+✔ Compiled successfully.
