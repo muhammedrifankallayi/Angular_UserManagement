@@ -79,7 +79,7 @@ export class AdminUsereditComponent implements OnInit {
   }
 
   getusers(userId:any){
-    this.http.post(`http://localhost:5000/api/admin/editDetails/${userId}`,{
+    this.http.post(`http://localhost:5000/api/admin/editDetails/${userId}`, {}, {
       withCredentials: true
     }).subscribe((res:any)=>{
       console.log(res);
