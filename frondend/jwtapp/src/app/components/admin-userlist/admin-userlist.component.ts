@@ -8,6 +8,7 @@ import { Users } from '../models/allUsers';
 import { appService } from '../state/app.service';
 import { uniqueEmail } from '../state/app.selectors';
 import Swal from 'sweetalert2';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-admin-userlist',
@@ -15,6 +16,8 @@ import Swal from 'sweetalert2';
   styleUrls: ['./admin-userlist.component.css']
 })
 export class AdminUserlistComponent implements OnInit {
+  searchQuery: string = '';
+
   constructor(
     private http:HttpClient,
     private store:Store<{allusers:Users[]}>,
@@ -22,7 +25,13 @@ export class AdminUserlistComponent implements OnInit {
     private appService:appService
   ){}
 
-  userdata$ = this.store.pipe(select(uniqueEmail))
+  userdata$ = this.store.pipe(
+    select(uniqueEmail),
+    map(users => users.filter(user =>
+      user.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(this.searchQuery.toLowerCase())
+    ))
+  )
     
   ngOnInit(): void {
     this.http.get('http://localhost:5000/api/admin/active',{
@@ -39,7 +48,7 @@ export class AdminUserlistComponent implements OnInit {
   }
 
   deleteUser(userId: any){
-    this.http.post(`http://localhost:5000/api/admin/deleteUser/${userId}`,{
+    this.http.post(`http://localhost:5000/api/admin/deleteUser/${userId}`, {}, {
       withCredentials:true
     }).subscribe((res:any)=>{
       this.store.dispatch(retrievepost())
@@ -55,6 +64,17 @@ export class AdminUserlistComponent implements OnInit {
 
   editUser(userId:any){
     this.router.navigate(['/admin/edit',userId])
+  }
+
+  onSearch(event: any) {
+    this.searchQuery = event.target.value;
+    this.userdata$ = this.store.pipe(
+      select(uniqueEmail),
+      map(users => users.filter(user =>
+        user.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(this.searchQuery.toLowerCase())
+      ))
+    )
   }
   
 }
