@@ -33,7 +33,7 @@ router.post('/register',async (req,res)=>{
 
         //jwt token
         const {_id} = await result.toJSON();
-        const token = jwt.sign({_id:_id},"secret");
+        const token = jwt.sign({_id:_id},process.env.jwtsecret);
 
         res.cookie("jwt",token,{
             httpOnly:true,
@@ -59,7 +59,7 @@ router.post('/login',async (req,res)=>{
         })
     }
 
-    const token = jwt.sign({_id:user._id},"secret");
+    const token = jwt.sign({_id:user._id},process.env.jwtsecret);
 
     res.cookie("jwt",token,{
         httpOnly:true,
@@ -75,7 +75,7 @@ router.post('/login',async (req,res)=>{
 router.get('/user',async (req,res)=>{
     try {
         const cookie = req.cookies["jwt"];
-        const claims = jwt.verify(cookie,"secret")
+        const claims = jwt.verify(cookie,process.env.jwtsecret)
         if(!claims){
             return res.status(401).send({
                 message:"unauthenticated"
@@ -103,7 +103,7 @@ router.post('/logout',(req,res)=>{
 router.post('/profile-upload-single',upload.single('image'),async(req,res)=>{
     try {
         const cookie = req.cookies["jwt"];
-        const claims = jwt.verify(cookie,"secret")
+        const claims = jwt.verify(cookie,process.env.jwtsecret)
         if(!claims){
             return res.status(401).send({
                 message:"unauthenticated"
@@ -124,7 +124,7 @@ router.post('/profile-upload-single',upload.single('image'),async(req,res)=>{
 router.get('/profile',async(req,res)=>{
     try {
         const cookie = req.cookies["jwt"];
-        const claims = jwt.verify(cookie,"secret")
+        const claims = jwt.verify(cookie,process.env.jwtsecret)
         if(!claims){
             return res.status(401).send({
                 message:"unauthenticated"
