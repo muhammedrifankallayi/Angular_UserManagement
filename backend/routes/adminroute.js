@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const adminrouter = Router();
 const bcrypt = require('bcryptjs');
+const { verifyToken, isAdmin } = require('../middleware/auth');
 
 adminrouter.post('/login',async (req,res)=>{
     try {
@@ -22,7 +23,7 @@ adminrouter.post('/login',async (req,res)=>{
             })
         }
 
-        const token = jwt.sign({_id:user._id},"secret");
+        const token = jwt.sign({_id:user._id},process.env.jwtsecret);
 
         res.cookie("jwt",token,{
             httpOnly:true,
@@ -44,21 +45,14 @@ adminrouter.post('/logout',async (req,res)=>{
             message:"success"
         })
     } catch (error) {
-        
+        console.error("Error in admin logout:", error);
+        res.status(500).send({ message: "Internal server error" });
     }
 })
 
-adminrouter.get('/active',async (req,res)=>{
+adminrouter.get('/active', verifyToken, isAdmin, async (req,res)=>{
     try {
-       const cookie = req.cookies["jwt"];
-       const claims = jwt.verify(cookie,"secret")
-       if(!claims){
-        return res.status(401).send({
-            message:"unauthenticated"
-        })
-       } 
-
-       const user = await User.findOne({_id:claims._id})
+       const user = await User.findOne({_id:req.userId})
        const {password, ...data} = await user.toJSON();
        console.log(data);
        res.send(data)
@@ -69,18 +63,17 @@ adminrouter.get('/active',async (req,res)=>{
     }
 })
 
-adminrouter.get('/users',async (req,res)=>{
+adminrouter.get('/users', verifyToken, isAdmin, async (req,res)=>{
     try {
-        const user = await User.find({})
-        // const {password, ...data} = await user.toJSON();
-        console.log(user);
-        res.send(user)
+        const users = await User.find({}, '-password')
+        console.log(users);
+        res.send(users)
     } catch (error) {
         console.log(error.message);
     }
 })
 
-adminrouter.post('/deleteUser/:id',async (req,res)=>{
+adminrouter.post('/deleteUser/:id', verifyToken, isAdmin, async (req,res)=>{
     try {
         const deleteUser = await User.deleteOne({_id:req.params.id});
         if(!deleteUser){
@@ -91,13 +84,14 @@ adminrouter.post('/deleteUser/:id',async (req,res)=>{
         console.log(deleteUser);
         res.send(deleteUser);
     } catch (error) {
-        
+        console.error("Error deleting user:", error);
+        res.status(500).send({ message: "Internal server error" });
     }
 })
 
-adminrouter.post('/editDetails/:id',async(req,res)=>{
+adminrouter.post('/editDetails/:id', verifyToken, isAdmin, async(req,res)=>{
     try {
-        const userData = await User.findOne({_id:req.params.id});
+        const userData = await User.findOne({_id:req.params.id}, '-password');
         if(!userData){
             res.send({
                 message:"Something went wrong"
@@ -111,7 +105,7 @@ adminrouter.post('/editDetails/:id',async(req,res)=>{
     }
 })
 
-adminrouter.post('/editUser',async(req,res)=>{
+adminrouter.post('/editUser', verifyToken, isAdmin, async(req,res)=>{
     try {
         let name = req.body.name;
         let userupdate = await User.updateOne({email:req.body.email},{$set:{name:name}});
@@ -123,7 +117,7 @@ adminrouter.post('/editUser',async(req,res)=>{
     }
 })
 
-adminrouter.post('/createuser',async(req,res)=>{
+adminrouter.post('/createuser', verifyToken, isAdmin, async(req,res)=>{
     try {
         let email = req.body.email;
     let password = req.body.password;
@@ -147,7 +141,7 @@ adminrouter.post('/createuser',async(req,res)=>{
 
         //jwt token
         const {_id} = await result.toJSON();
-        const token = jwt.sign({_id:_id},"secret");
+        const token = jwt.sign({_id:_id},process.env.jwtsecret);
 
         res.cookie("jwt",token,{
             httpOnly:true,
